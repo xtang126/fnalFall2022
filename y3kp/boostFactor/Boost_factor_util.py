@@ -5,6 +5,25 @@
 
 import numpy as np
 
+def read_desy1_data(path = "/global/cfs/cdirs/des/jesteves/data/boost_factor/y1/profiles"):
+    B= dict()
+    # z = np.round((np.unique(options["BoostFactor","zo_low"]) +np.unique(options["BoostFactor","zo_high"]))/2.,2)
+    # l = np.round((options["BoostFactor","lo_low"] +options["BoostFactor","lo_high"])/2.,2)
+    # bins = Boost_factor_util.lookup_table(l,z)
+
+    for L in range(7):
+        for Z in range(3):
+            R,data_vector,sigma_B = np.genfromtxt(path+"/full-unblind-v2-mcal-zmix_y1clust_l{l}_z{z}_zpdf_boost.dat".format(l = L, z = Z),unpack=True)
+            covariance = np.genfromtxt(path+"/full-unblind-v2-mcal-zmix_y1clust_l{l}_z{z}_zpdf_boost_cov.dat".format(l = L, z = Z),unpack=True)
+# the error bars on the last two points of the data are tiny, so the MCMC is doing its best to fit for them. (They are tiny due to bad data)
+#The following rewrites them. 
+            ix=np.nonzero(sigma_B < 10**(-6))
+            sigma_B[ix]=10**6
+            covariance[ix,:]= 10**6
+            covariance[:,ix]=10**6
+            B[L,Z]=data_vector,sigma_B,covariance
+    return R,B
+    
 def Boost_Factor_param(Z,L,Rs,alpha_Rs,beta_Rs,B0,alpha_B0,beta_B0):
     """This function takes the priors from the values file and calculates rs and b0 values for the model given redshift and lambda
     """
